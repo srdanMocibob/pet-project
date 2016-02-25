@@ -23,9 +23,16 @@ angular.module('todomvc')
         // Monitor the current route for changes and adjust the filter accordingly.
         $scope.$on('$routeChangeSuccess', function () {
             var status = $scope.status = $routeParams.status || '';
-            $scope.statusFilter = (status === 'active') ?
-            {completed: false} : (status === 'completed') ?
-            {completed: true} : {};
+
+            if (status === 'active') {
+                $scope.statusFilter = {completed: false};
+            }
+            else if (status === 'completed') {
+                $scope.statusFilter = {completed: true};
+            }
+            else {
+                $scope.statusFilter = {};
+            }
         });
 
         $scope.addTodo = function () {
