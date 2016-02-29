@@ -23,5 +23,11 @@ The following table gives the list of tasks we'd like you to work on, listed in 
 
 Each task should be implemented on a dedicated feature branch (following the [git flow](https://www.atlassian.com/git/tutorials/comparing-workflows/gitflow-workflow) branching model). Once you consider that feature to be completely implemented and ready to be shipped, you should push the feature branch back to the server and then then create a pull request that best summarizes the state of your work.
 
-* **_TODO-1_: Add support for managing more than one list.** This includes the ability for the user to add new/delete existing lists as well as to give each list a meaningful name. Make sure the UI extensions required are consistent with the existing visual style of the application and that there are meaningful unit tests for the new feature, as well.
-* **_TODO-2_: Replace the local storage with a proper server-side back-end** implemented on top of [Socket.io](http://socket.io/). All connected clients should share the same lists. Updates requested by one client should immediately be made visible to all other clients without explicit page refresh (e.g. using the CQRS pattern). Make sure the new back-end process can be easily started via ``grunt``.
+* **_TODO-1_:** Add support for managing more than one list.** This includes the ability for the user to add new/delete existing lists as well as to give each list a meaningful name. Make sure the UI extensions required are consistent with the existing visual style of the application and that there are meaningful unit tests for the new feature, as well.
+* **_TODO-2_:** Replace the local storage with a proper server-side back-end** implemented on top of [Socket.io](http://socket.io/). All connected clients should share the same lists. Updates requested by one client should immediately be made visible to all other clients without explicit page refresh (e.g. using the CQRS pattern).
+* **_TODO-3_:** Use [Grunt](http://gruntjs.com/) to implement a basic build process that...
+  * ...(re)starts the back-end process via `nodemon` as required.
+  * ...uses `livereload` to automatically trigger updates in the browser as required.
+  * ...performs static code analysis via `jshint` whenever a file changes.
+  * ...re-runs the unit test suite (built on top of `karma` and `jasmine`) whenever a file changes.
+* **_TODO-4_:** Use [Protractor](https://angular.github.io/protractor/#/) and [Docker](https://www.docker.com/) to build a basic suite of function (UI) test cases that can e.g. be run as part of the (headless) continuous integration process.
