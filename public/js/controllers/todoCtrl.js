@@ -14,6 +14,7 @@ angular.module('todomvc')
         $scope.maxId = Math.max.apply(Math, $scope.data.todoLists.map(function(tl){return tl.id;})) | 0;
 
         $scope.newTodo = '';
+        $scope.newTodoList = '';
         $scope.editedTodo = null;
         $scope.creatingNewTodoList = false;
         $scope.editTodoList = store.editTodoList;
@@ -68,6 +69,11 @@ angular.module('todomvc')
                 name: $scope.newTodoList.trim(),
                 id: $scope.maxId+1
             }
+
+            if (!newTodoList.name) {
+                return;
+            }
+
             $scope.saving = true;
             store.insertTodoList(newTodoList)
                 .then(function success() {
