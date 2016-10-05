@@ -6,18 +6,25 @@
  * - exposes the model to the template and provides event handlers
  */
 angular.module('todomvc')
-    .controller('TodoCtrl', function TodoCtrl($scope, $routeParams, $filter, store) {
+    .controller('TodoCtrl', function TodoCtrl($scope, $routeParams, $filter, store, $location) {
         'use strict';
 
-        var todos = $scope.todos = store.todos;
+        var data = $scope.data = store.data;
+        // we get the max id from all todoLists
+        $scope.maxId = Math.max.apply(Math, $scope.data.todoLists.map(function(tl){return tl.id;})) | 0;
 
         $scope.newTodo = '';
         $scope.editedTodo = null;
+        $scope.creatingNewTodoList = false;
+        $scope.editTodoList = store.editTodoList;
 
-        $scope.$watch('todos', function () {
-            $scope.remainingCount = $filter('filter')(todos, {completed: false}).length;
-            $scope.completedCount = todos.length - $scope.remainingCount;
-            $scope.allChecked = !$scope.remainingCount;
+        $scope.$watch('data', function () {
+            if ($scope.editTodoList) {
+                $scope.editTodoList.todos = data.todos.filter(function (item) { return item.todoListId == $scope.editTodoList.id; });
+                $scope.remainingCount = $filter('filter')($scope.editTodoList.todos, {completed: false}).length;
+                $scope.completedCount = $scope.editTodoList.todos.length - $scope.remainingCount;
+                $scope.allChecked = !$scope.remainingCount;
+            }
         }, true);
 
         // Monitor the current route for changes and adjust the filter accordingly.
@@ -35,10 +42,11 @@ angular.module('todomvc')
             }
         });
 
-        $scope.addTodo = function () {
+        $scope.addTodo = function (todoListId) {
             var newTodo = {
                 title    : $scope.newTodo.trim(),
-                completed: false
+                completed: false,
+                todoListId: todoListId
             };
 
             if (!newTodo.title) {
@@ -52,6 +60,22 @@ angular.module('todomvc')
                 })
                 .finally(function () {
                     $scope.saving = false;
+                });
+        };
+
+        $scope.addTodoList = function () {
+            var newTodoList = {
+                name: $scope.newTodoList.trim(),
+                id: $scope.maxId+1
+            }
+            $scope.saving = true;
+            store.insertTodoList(newTodoList)
+                .then(function success() {
+                    $scope.newTodoList = '';
+                })
+                .finally(function () {
+                    $scope.saving = false;
+                    $location.path('/editTodoList/' + newTodoList.id);
                 });
         };
 
@@ -95,7 +119,7 @@ angular.module('todomvc')
         };
 
         $scope.revertEdits = function (todo) {
-            todos[todos.indexOf(todo)] = $scope.originalTodo;
+            data.todos[data.todos.indexOf(todo)] = $scope.originalTodo;
             $scope.editedTodo = null;
             $scope.originalTodo = null;
             $scope.reverted = true;
@@ -103,6 +127,23 @@ angular.module('todomvc')
 
         $scope.removeTodo = function (todo) {
             store.delete(todo);
+        };
+
+        $scope.removeTodoList = function (todoList) {
+            store.deleteTodoList(todoList);
+        };
+
+        $scope.createNewTodoList = function () {
+            $scope.creatingNewTodoList = true;
+        };
+
+        $scope.cancelNewTodoList = function () {
+            $scope.creatingNewTodoList = false;
+            $scope.newTodoList = '';
+        };
+
+        $scope.backToTodoLists = function () {
+            $location.path('/');
         };
 
         $scope.saveTodo = function (todo) {
@@ -113,7 +154,7 @@ angular.module('todomvc')
             if (angular.isDefined(completed)) {
                 todo.completed = completed;
             }
-            store.put(todo, todos.indexOf(todo))
+            store.put(todo, data.todos.indexOf(todo))
                 .then(function success() {
                 }, function error() {
                     todo.completed = !todo.completed;
@@ -124,8 +165,8 @@ angular.module('todomvc')
             store.clearCompleted();
         };
 
-        $scope.markAll = function (completed) {
-            todos.forEach(function (todo) {
+        $scope.markAll = function (completed, todoListId) {
+            $scope.editTodoList.todos.forEach(function (todo) {
                 if (todo.completed !== completed) {
                     $scope.toggleCompleted(todo, completed);
                 }

@@ -9,9 +9,9 @@ angular.module('todomvc', ['ngRoute', 'ngResource'])
     .config(function ($routeProvider) {
         'use strict';
 
-        var routeConfig = {
+        var showTodoLists = {
             controller : 'TodoCtrl',
-            templateUrl: 'todomvc-index.html',
+            templateUrl: 'todomvc-showTodoLists.html',
             resolve    : {
                 store: function (todoStorage) {
                     // Get the correct module (API or localStorage).
@@ -23,9 +23,24 @@ angular.module('todomvc', ['ngRoute', 'ngResource'])
             }
         };
 
+        var editTodoList = {
+            controller : 'TodoCtrl',
+            templateUrl: 'todomvc-editTodoList.html',
+            resolve    : {
+                store: function (todoStorage, $route) {
+                    // Get the correct module (API or localStorage).
+                    return todoStorage.then(function (module) {
+                        module.getTodoList($route.current.params.id);
+                        return module;
+                    });
+                }
+            }
+        };
+
         $routeProvider
-            .when('/', routeConfig)
-            .when('/:status', routeConfig)
+            .when('/', showTodoLists)
+            .when('/editTodoList/:id', editTodoList)
+            .when('/editTodoList/:id/:status', editTodoList)
             .otherwise({
                 redirectTo: '/'
             });

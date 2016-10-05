@@ -14,19 +14,57 @@
     <body ng-app="todomvc">
         <ng-view/>
 
-        <script type="text/ng-template" id="todomvc-index.html">
+        <script type="text/ng-template" id="todomvc-showTodoLists.html">
             <section id="todoapp">
                 <header id="header">
-                    <h1>todos</h1>
-                    <form id="todo-form" ng-submit="addTodo()">
+                    <h1>Todo Lists</h1>
+                </header>
+                <section id="main">
+                    <ul id="todo-list">
+                        <li ng-repeat="todoList in data.todoLists">
+                            <div class="view">
+                                <label class="todo-list-label">
+                                    <a class="todo-list-name" href="#editTodoList/{{todoList.id}}">{{todoList.name}}</a>
+                                </label>
+                                <button class="destroy" ng-click="removeTodoList(todoList)"></button>
+                            </div>
+                        </li>
+                    </ul>
+                    <button class="create-new-todo-list interaction-button" ng-click="createNewTodoList()">Create New Todo List</button>
+
+                    <form id="todoList-form" ng-show="creatingNewTodoList" ng-submit="addTodoList()">
+                        <input id="new-todo-list" placeholder="New Todo List Name" ng-model="newTodoList">
+                    </form>
+                    <button class="save-new-todo-list interaction-button" ng-show="creatingNewTodoList" ng-click="addTodoList()" ng-disabled="!newTodoList.length">Save</button>
+                    <button class="cancel-new-todo-list interaction-button" ng-show="creatingNewTodoList" ng-click="cancelNewTodoList()">Cancel</button>
+                </section>
+            </section>
+            <footer id="info">
+                <p>Credits:
+                    <a href="http://twitter.com/cburgdorf">Christoph Burgdorf</a>,
+                    <a href="http://ericbidelman.com">Eric Bidelman</a>,
+                    <a href="http://jacobmumm.com">Jacob Mumm</a>,
+                    <a href="http://blog.igorminar.com">Igor Minar</a> and
+                    <a href="#">Srđan Močibob</a>
+                </p>
+                <p>Part of <a href="http://todomvc.com">TodoMVC</a></p>
+            </footer>
+        </script>
+
+        <script type="text/ng-template" id="todomvc-editTodoList.html">
+            <section id="todoapp">
+                <header id="header">
+                    <button class="back-to-todo-lists interaction-button" ng-click="backToTodoLists()">Back</button>
+                    <h1>{{editTodoList.name}}</h1>
+                    <form id="todo-form" ng-submit="addTodo(editTodoList.id)">
                         <input id="new-todo" placeholder="What needs to be done?" ng-model="newTodo" ng-disabled="saving" autofocus>
                     </form>
                 </header>
-                <section id="main" ng-show="todos.length" ng-cloak>
-                    <input id="toggle-all" type="checkbox" ng-model="allChecked" ng-click="markAll(allChecked)">
+                <section id="main" ng-show="editTodoList.todos.length" ng-cloak>
+                    <input id="toggle-all" type="checkbox" ng-model="allChecked" ng-click="markAll(allChecked, editTodoList.id)">
                     <label for="toggle-all">Mark all as complete</label>
                     <ul id="todo-list">
-                        <li ng-repeat="todo in todos | filter:statusFilter track by $index" ng-class="{completed: todo.completed, editing: todo == editedTodo}">
+                        <li ng-repeat="todo in editTodoList.todos | filter:statusFilter track by $index" ng-class="{completed: todo.completed, editing: todo == editedTodo}">
                             <div class="view">
                                 <input class="toggle" type="checkbox" ng-model="todo.completed" ng-change="toggleCompleted(todo)">
                                 <label ng-dblclick="editTodo(todo)">{{todo.title}}</label>
@@ -39,19 +77,19 @@
                         </li>
                     </ul>
                 </section>
-                <footer id="footer" ng-show="todos.length" ng-cloak>
-					<span id="todo-count"><strong>{{remainingCount}}</strong>
-						<ng-pluralize count="remainingCount" when="{ one: 'item left', other: 'items left' }"></ng-pluralize>
-					</span>
+                <footer id="footer" ng-show="editTodoList.todos.length" ng-cloak>
+                    <span id="todo-count"><strong>{{remainingCount}}</strong>
+                        <ng-pluralize count="remainingCount" when="{ one: 'item left', other: 'items left' }"></ng-pluralize>
+                    </span>
                     <ul id="filters">
                         <li>
-                            <a ng-class="{selected: status == ''} " href="#/">All</a>
+                            <a ng-class="{selected: status == ''} " href="#/editTodoList/{{editTodoList.id}}">All</a>
                         </li>
                         <li>
-                            <a ng-class="{selected: status == 'active'}" href="#/active">Active</a>
+                            <a ng-class="{selected: status == 'active'}" href="#/editTodoList/{{editTodoList.id}}/active">Active</a>
                         </li>
                         <li>
-                            <a ng-class="{selected: status == 'completed'}" href="#/completed">Completed</a>
+                            <a ng-class="{selected: status == 'completed'}" href="#/editTodoList/{{editTodoList.id}}/completed">Completed</a>
                         </li>
                     </ul>
                     <button id="clear-completed" ng-click="clearCompletedTodos()" ng-show="completedCount">Clear completed</button>
@@ -62,11 +100,14 @@
                 <p>Credits:
                     <a href="http://twitter.com/cburgdorf">Christoph Burgdorf</a>,
                     <a href="http://ericbidelman.com">Eric Bidelman</a>,
-                    <a href="http://jacobmumm.com">Jacob Mumm</a> and
-                    <a href="http://blog.igorminar.com">Igor Minar</a>
+                    <a href="http://jacobmumm.com">Jacob Mumm</a>,
+                    <a href="http://blog.igorminar.com">Igor Minar</a> and
+                    <a href="#">Srđan Močibob</a>
                 </p>
                 <p>Part of <a href="http://todomvc.com">TodoMVC</a></p>
             </footer>
+        </script>
+
         </script>
         <script src="lib/angular/angular.js"></script>
         <script src="lib/angular-route/angular-route.js"></script>
