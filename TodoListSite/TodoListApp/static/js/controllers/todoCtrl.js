@@ -2,12 +2,14 @@
 
 /**
  * The main controller for the app. The controller:
- * - retrieves and persists the model via the todoStorage service
+ * - retrieves and persists the model via the Django REST API
  * - exposes the model to the template and provides event handlers
  */
 angular.module('todomvc')
     .controller('TodoCtrl', function TodoCtrl($scope, $routeParams, $filter, store, $location) {
         'use strict';
+
+        var url = "http://127.0.0.1:8000/api/todo-list/";
 
         var data = $scope.data = store.data;
         // we get the max id from all todoLists
@@ -21,16 +23,27 @@ angular.module('todomvc')
 
         $scope.$watch('data', function () {
             if ($scope.editTodoList) {
-                $scope.editTodoList.todos = data.todos.filter(function (item) { return item.todoListId == $scope.editTodoList.id; });
-                $scope.remainingCount = $filter('filter')($scope.editTodoList.todos, {completed: false}).length;
-                $scope.completedCount = $scope.editTodoList.todos.length - $scope.remainingCount;
-                $scope.allChecked = !$scope.remainingCount;
+                var todoList = data.todoLists.find(function (item) { return item.id == $scope.editTodoList.id; });
+
+                if (todoList) {
+                    $scope.editTodoList = {
+                        todos: data.todos.filter(function (item) { return item.todo_list == url + todoList.id + "/"; }),
+                        id: $scope.editTodoList.id,
+                        name: todoList.name,
+                    };
+                    $scope.remainingCount = $filter('filter')($scope.editTodoList.todos, {completed: false}).length;
+                    $scope.completedCount = $scope.editTodoList.todos.length - $scope.remainingCount;
+                    $scope.allChecked = !$scope.remainingCount;
+                }
             }
         }, true);
 
         // Monitor the current route for changes and adjust the filter accordingly.
         $scope.$on('$routeChangeSuccess', function () {
+            var todoListId = $scope.todoListId = $routeParams.todoListId || '';
             var status = $scope.status = $routeParams.status || '';
+
+            $scope.todosFilter = { todo_list: url + todoListId + "/" };
 
             if (status === 'active') {
                 $scope.statusFilter = {completed: false};
@@ -43,16 +56,17 @@ angular.module('todomvc')
             }
         });
 
-        $scope.addTodo = function (todoListId) {
+        $scope.addTodo = function (todoList) {
             var newTodo = {
                 title    : $scope.newTodo.trim(),
                 completed: false,
-                todoListId: todoListId
+                todo_list: url + todoList.id + "/"
             };
 
             if (!newTodo.title) {
                 return;
             }
+
 
             $scope.saving = true;
             store.insert(newTodo)
@@ -67,7 +81,6 @@ angular.module('todomvc')
         $scope.addTodoList = function () {
             var newTodoList = {
                 name: $scope.newTodoList.trim(),
-                id: $scope.maxId+1
             }
 
             if (!newTodoList.name) {
@@ -156,14 +169,13 @@ angular.module('todomvc')
             store.put(todo);
         };
 
-        $scope.toggleCompleted = function (todo, completed) {
-            if (angular.isDefined(completed)) {
-                todo.completed = completed;
-            }
-            store.put(todo, data.todos.indexOf(todo))
+        $scope.toggleCompleted = function (todo) {
+            store.put(todo)
                 .then(function success() {
+                    var index = data.todos.map(function(e) { return e.id; }).indexOf(todo.id);
+                    data.todos[index] = todo;
                 }, function error() {
-                    todo.completed = !todo.completed;
+                    data.todos[index].completed = !todo.completed;
                 });
         };
 
@@ -174,7 +186,8 @@ angular.module('todomvc')
         $scope.markAll = function (completed, todoListId) {
             $scope.editTodoList.todos.forEach(function (todo) {
                 if (todo.completed !== completed) {
-                    $scope.toggleCompleted(todo, completed);
+                    todo.completed = !todo.completed;
+                    $scope.toggleCompleted(todo);
                 }
             });
         };

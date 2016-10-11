@@ -27,6 +27,10 @@
             });
         }));
 
+        it('should not have any Todo Lists on start', function () {
+            expect(scope.data.todoLists.length).toBe(0);
+        });
+
         it('should not have an edited Todo on start', function () {
             expect(scope.editedTodo).toBeNull();
         });
@@ -95,6 +99,28 @@
                 scope.$digest();
             }));
 
+            it('should not add Todo Lists with empty name', function () {
+                scope.newTodoList = '';
+                scope.addTodoList();
+                scope.$digest();
+                expect(scope.data.todoLists.length).toBe(0);
+            });
+
+            it('should not add Todo Lists with name consisting only of whitespaces', function () {
+                scope.newTodoList = '   ';
+                scope.addTodoList();
+                scope.$digest();
+                expect(scope.data.todoLists.length).toBe(0);
+            });
+
+            it('should trim whitespace from Todo List name', function () {
+                scope.newTodoList = '  Groceries  ';
+                scope.addTodoList();
+                scope.$digest();
+                expect(scope.data.todoLists.length).toBe(1);
+                expect(scope.data.todoLists[0].name).toBe('Groceries');
+            });
+
             it('should not add empty Todos', function () {
                 scope.newTodo = '';
                 scope.addTodo();
@@ -108,7 +134,6 @@
                 scope.$digest();
                 expect(scope.data.todos.length).toBe(0);
             });
-
 
             it('should trim whitespace from new Todos', function () {
                 scope.newTodo = '  buy some unicorns  ';
